@@ -16,6 +16,7 @@
     <input type="date" id="appointmentDate" />
     <button onclick="addAppointment()">Book</button>
     <ul id="appointmentList"></ul>
+    <br><a href="index.html" class="back-button">→ Back to Home</a>
   </div>
 
   <script>
@@ -33,13 +34,34 @@
     function addAppointment() {
       const patient = document.getElementById("patientName").value;
       const doctor = document.getElementById("doctorSelect").value;
-      const date = new Date(document.getElementById("appointmentDate").value);
-      if (date <= new Date()) {
+      const dateValue = document.getElementById("appointmentDate").value;
+
+      if (!patient || !doctor || !dateValue) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const date = new Date(dateValue);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (date <= today) {
         alert("Please choose a future date.");
         return;
       }
+
+      const newAppointment = {
+        patient,
+        doctor,
+        date: date.toDateString()
+      };
+
+      const appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+      appointments.push(newAppointment);
+      localStorage.setItem("appointments", JSON.stringify(appointments));
+
       const li = document.createElement("li");
-      li.textContent = `${patient} - ${doctor} - ${date.toDateString()}`;
+      li.textContent = `${patient} - ${doctor} - ${newAppointment.date}`;
       document.getElementById("appointmentList").appendChild(li);
     }
 

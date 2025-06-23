@@ -12,8 +12,12 @@
     <input type="text" id="specialization" placeholder="Specialization" />
     <input type="text" id="timing" placeholder="Available Time" />
     <button onclick="addDoctor()">Add Doctor</button>
+
     <ul id="doctorList"></ul>
-    <a href="appointment.html">Go to Appointments</a>
+    
+    <br>
+    
+    <a href="view_appointments.html" class="back-button">→ View Appointments</a><br>
   </div>
 
   <script>
@@ -21,23 +25,59 @@
       const name = document.getElementById("doctorName").value;
       const spec = document.getElementById("specialization").value;
       const time = document.getElementById("timing").value;
-      const doctor = { name, spec, time };
-      let doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-      doctors.push(doctor);
+
+      if (!name || !spec || !time) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+      doctors.push({ name, spec, time });
       localStorage.setItem("doctors", JSON.stringify(doctors));
-      const li = document.createElement("li");
-      li.textContent = `${name} - ${spec} (${time})`;
-      document.getElementById("doctorList").appendChild(li);
+      displayDoctors();
+      document.getElementById("doctorName").value = '';
+      document.getElementById("specialization").value = '';
+      document.getElementById("timing").value = '';
     }
 
-    window.onload = () => {
+    function deleteDoctor(index) {
       const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-      for (const doc of doctors) {
-        const li = document.createElement("li");
-        li.textContent = `${doc.name} - ${doc.spec} (${doc.time})`;
-        document.getElementById("doctorList").appendChild(li);
+      doctors.splice(index, 1);
+      localStorage.setItem("doctors", JSON.stringify(doctors));
+      displayDoctors();
+    }
+
+    function editDoctor(index) {
+      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+      const doc = doctors[index];
+      const newName = prompt("Edit name:", doc.name);
+      const newSpec = prompt("Edit specialization:", doc.spec);
+      const newTime = prompt("Edit time:", doc.time);
+
+      if (newName && newSpec && newTime) {
+        doctors[index] = { name: newName, spec: newSpec, time: newTime };
+        localStorage.setItem("doctors", JSON.stringify(doctors));
+        displayDoctors();
       }
-    };
+    }
+
+    function displayDoctors() {
+      const doctorList = document.getElementById("doctorList");
+      doctorList.innerHTML = "";
+      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+
+      doctors.forEach((doc, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${doc.name} - ${doc.spec} (${doc.time})
+          <button onclick="editDoctor(${index})">Edit</button>
+          <button onclick="deleteDoctor(${index})">Delete</button>
+        `;
+        doctorList.appendChild(li);
+      });
+    }
+
+    window.onload = displayDoctors;
   </script>
 </body>
 </html>

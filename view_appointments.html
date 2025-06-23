@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>View Appointments - Global Hospital</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="form-card">
+    <h2>View Doctor Appointments</h2>
+    <label for="doctorSelect">Choose a Doctor:</label>
+    <select id="doctorSelect" onchange="showAppointments()">
+      <option disabled selected>Select Doctor</option>
+    </select>
+    <ul id="doctorAppointmentsList"></ul>
+    <br><a href="index.html" class="back-button">→ Back to Home page</a>
+  </div>
+
+  <script>
+    function loadDoctors() {
+      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+      const select = document.getElementById("doctorSelect");
+      select.innerHTML = '<option disabled selected>Select Doctor</option>';
+      doctors.forEach(doc => {
+        const option = document.createElement("option");
+        option.value = doc.name;
+        option.textContent = doc.name;
+        select.appendChild(option);
+      });
+    }
+
+    function showAppointments() {
+      const selectedDoctor = document.getElementById("doctorSelect").value;
+      const appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+      const list = document.getElementById("doctorAppointmentsList");
+      list.innerHTML = "";
+
+      const filtered = appointments.filter(appt => appt.doctor === selectedDoctor);
+      if (filtered.length === 0) {
+        list.innerHTML = "<li>No appointments found for this doctor.</li>";
+        return;
+      }
+
+      filtered.forEach(appt => {
+        const li = document.createElement("li");
+        li.textContent = `${appt.patient} - ${appt.date}`;
+        list.appendChild(li);
+      });
+    }
+
+    window.onload = loadDoctors;
+  </script>
+</body>
+</html>

@@ -82,3 +82,48 @@ ul {
 .error-msg {
   color: red;
 }
+.back-button {
+  display: inline-block;
+  margin-top: 20px;
+  color: #6d4bb1;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+#doctorList li button {
+  margin-left: 10px;
+  background-color: #e0cfff;
+  color: #5a42a3;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#doctorList li button:hover {
+  background-color: #c7b2f0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(120deg, #f6f3ff, #e0d1ff);  /* Soft gradient */
+  color: #333;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f6f3ff;  /* Light lavender */
+  color: #333;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
