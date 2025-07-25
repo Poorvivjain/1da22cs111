@@ -16,7 +16,6 @@
       <a href="appointment.html">Appointments</a>
       <a href="view_appointments.html"> View Appointments</a>
       <a href="admin_login.html"> Admin Login</a>
-
     </nav>
   </header>
 
@@ -44,7 +43,41 @@
     <a href="admin_login.html">
       <button>Login by admin</button>
     </a>
-
   </section>
+
+  <!-- Firebase script here -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALDkSWZRuKcG7Gfn9w1agvnWtma3qmPVc",
+      authDomain: "hmm1-84404.firebaseapp.com",
+      projectId: "hmm1-84404",
+      storageBucket: "hmm1-84404.appspot.com",
+      messagingSenderId: "380112403059",
+      appId: "1:380112403059:web:7879897802d5ca46e4c806",
+      measurementId: "G-LE5BR7TSK6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    try {
+      const docRef = await addDoc(collection(db, "visitors"), {
+        timestamp: Date.now()
+      });
+      console.log("Visitor logged with ID:", docRef.id);
+    } catch (e) {
+      console.error("Error adding visitor:", e);
+    }
+
+    try {
+      const snapshot = await getDocs(collection(db, "visitors"));
+      console.log("Total visitors logged:", snapshot.size);
+    } catch (e) {
+      console.error("Error fetching visitors:", e);
+    }
+  </script>
 </body>
 </html>
