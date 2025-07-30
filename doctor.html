@@ -12,13 +12,12 @@
     <input type="text" id="specialization" placeholder="Specialization" />
     <input type="text" id="timing" placeholder="Available Time" />
     <button id="addDoctorBtn">Add Doctor</button>
-
     <ul id="doctorList"></ul>
     <br>
     <a href="view_appointments.html" class="back-button">→ View Appointments</a>
   </div>
 
-  <!-- ✅ Firebase Script -->
+  <!-- ✅ Script placed LAST, after HTML -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
@@ -34,10 +33,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ✅ Add event listener instead of onclick
-    document.getElementById('addDoctorBtn').addEventListener('click', addDoctor);
-
-    async function addDoctor() {
+    document.getElementById('addDoctorBtn').addEventListener('click', async () => {
       const name = document.getElementById("doctorName").value.trim();
       const spec = document.getElementById("specialization").value.trim();
       const time = document.getElementById("timing").value.trim();
@@ -48,12 +44,9 @@
       }
 
       try {
-        await addDoc(collection(db, "doctors"), {
-          name, spec, time
-        });
+        await addDoc(collection(db, "doctors"), { name, spec, time });
         alert("✅ Doctor added!");
         loadDoctors();
-
         document.getElementById("doctorName").value = '';
         document.getElementById("specialization").value = '';
         document.getElementById("timing").value = '';
@@ -61,36 +54,7 @@
         console.error("Error adding doctor:", e);
         alert("❌ Failed to add doctor.");
       }
-    }
-
-    window.deleteDoctor = async function(id) {
-      const confirmDelete = confirm("Delete this doctor?");
-      if (!confirmDelete) return;
-      try {
-        await deleteDoc(doc(db, "doctors", id));
-        alert("🗑 Deleted!");
-        loadDoctors();
-      } catch (e) {
-        console.error("Error deleting doctor:", e);
-      }
-    }
-
-    window.editDoctor = async function(id, oldName, oldSpec, oldTime) {
-      const newName = prompt("Edit name:", oldName);
-      const newSpec = prompt("Edit specialization:", oldSpec);
-      const newTime = prompt("Edit time:", oldTime);
-      if (!newName || !newSpec || !newTime) return;
-
-      try {
-        await updateDoc(doc(db, "doctors", id), {
-          name: newName, spec: newSpec, time: newTime
-        });
-        alert("✏️ Updated!");
-        loadDoctors();
-      } catch (e) {
-        console.error("Error updating doctor:", e);
-      }
-    }
+    });
 
     async function loadDoctors() {
       try {
@@ -102,8 +66,6 @@
           const li = document.createElement("li");
           li.innerHTML = `
             ${data.name} - ${data.spec} (${data.time})
-            <button onclick="editDoctor('${docSnap.id}', '${data.name}', '${data.spec}', '${data.time}')">Edit</button>
-            <button onclick="deleteDoctor('${docSnap.id}')">Delete</button>
           `;
           list.appendChild(li);
         });
@@ -112,7 +74,8 @@
       }
     }
 
-    window.onload = loadDoctors;
+    // Load doctors on page load
+    loadDoctors();
   </script>
 </body>
 </html>
