@@ -12,16 +12,18 @@
     <input type="text" id="specialization" placeholder="Specialization" />
     <input type="text" id="timing" placeholder="Available Time" />
     <button id="addDoctorBtn">Add Doctor</button>
+
     <ul id="doctorList"></ul>
     <br>
     <a href="view_appointments.html" class="back-button">→ View Appointments</a>
   </div>
 
-  <!-- ✅ Script placed LAST, after HTML -->
+  <!-- ✅ Firebase Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+    // ✅ Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyALDkSWZRuKcG7Gfn9w1agvnWtma3qmPVc",
       authDomain: "hmm1-84404.firebaseapp.com",
@@ -30,9 +32,12 @@
       messagingSenderId: "380112403059",
       appId: "1:380112403059:web:7879897802d5ca46e4c806"
     };
+
+    // ✅ Initialize
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // ✅ Add Doctor
     document.getElementById('addDoctorBtn').addEventListener('click', async () => {
       const name = document.getElementById("doctorName").value.trim();
       const spec = document.getElementById("specialization").value.trim();
@@ -47,6 +52,7 @@
         await addDoc(collection(db, "doctors"), { name, spec, time });
         alert("✅ Doctor added!");
         loadDoctors();
+        // Clear fields
         document.getElementById("doctorName").value = '';
         document.getElementById("specialization").value = '';
         document.getElementById("timing").value = '';
@@ -56,6 +62,7 @@
       }
     });
 
+    // ✅ Load and display doctors
     async function loadDoctors() {
       try {
         const querySnapshot = await getDocs(collection(db, "doctors"));
@@ -63,9 +70,12 @@
         list.innerHTML = "";
         querySnapshot.forEach(docSnap => {
           const data = docSnap.data();
+          const id = docSnap.id;
           const li = document.createElement("li");
           li.innerHTML = `
             ${data.name} - ${data.spec} (${data.time})
+            <button onclick="editDoctor('${id}', '${data.name}', '${data.spec}', '${data.time}')">Edit</button>
+            <button onclick="deleteDoctor('${id}')">Delete</button>
           `;
           list.appendChild(li);
         });
@@ -74,8 +84,48 @@
       }
     }
 
-    // Load doctors on page load
+    // ✅ Edit doctor
+    window.editDoctor = async (id, currentName, currentSpec, currentTime) => {
+      const newName = prompt("Edit name:", currentName);
+      const newSpec = prompt("Edit specialization:", currentSpec);
+      const newTime = prompt("Edit available time:", currentTime);
+
+      if (!newName || !newSpec || !newTime) {
+        alert("❌ All fields must be filled.");
+        return;
+      }
+
+      try {
+        await updateDoc(doc(db, "doctors", id), {
+          name: newName,
+          spec: newSpec,
+          time: newTime
+        });
+        alert("✅ Doctor updated!");
+        loadDoctors();
+      } catch (e) {
+        console.error("Error editing doctor:", e);
+        alert("❌ Failed to edit doctor.");
+      }
+    }
+
+    // ✅ Delete doctor
+    window.deleteDoctor = async (id) => {
+      if (confirm("Are you sure you want to delete this doctor?")) {
+        try {
+          await deleteDoc(doc(db, "doctors", id));
+          alert("🗑️ Doctor deleted!");
+          loadDoctors();
+        } catch (e) {
+          console.error("Error deleting doctor:", e);
+          alert("❌ Failed to delete doctor.");
+        }
+      }
+    }
+
+    // ✅ Load doctors when page loads
     loadDoctors();
   </script>
 </body>
 </html>
+
