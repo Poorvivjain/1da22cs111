@@ -30,8 +30,27 @@
         select.appendChild(option);
       });
     }
+    window.onload = loadDoctors;
+  </script>
 
-    function addAppointment() {
+  <!-- ✅ Firebase script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyALDkSWZRuKcG7Gfn9w1agvnWtma3qmPVc",
+      authDomain: "hmm1-84404.firebaseapp.com",
+      projectId: "hmm1-84404",
+      storageBucket: "hmm1-84404.appspot.com",
+      messagingSenderId: "380112403059",
+      appId: "1:380112403059:web:7879897802d5ca46e4c806"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addAppointment = async function() {
       const patient = document.getElementById("patientName").value;
       const doctor = document.getElementById("doctorSelect").value;
       const dateValue = document.getElementById("appointmentDate").value;
@@ -44,28 +63,48 @@
       const date = new Date(dateValue);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
       if (date <= today) {
         alert("Please choose a future date.");
         return;
       }
 
-      const newAppointment = {
-        patient,
-        doctor,
-        date: date.toDateString()
-      };
-
-      const appointments = JSON.parse(localStorage.getItem("appointments")) || [];
-      appointments.push(newAppointment);
-      localStorage.setItem("appointments", JSON.stringify(appointments));
-
-      const li = document.createElement("li");
-      li.textContent = `${patient} - ${doctor} - ${newAppointment.date}`;
-      document.getElementById("appointmentList").appendChild(li);
+      try {
+        await addDoc(collection(db, "appointments"), {
+          patient,
+          doctor,
+          date: date.toDateString(),
+          timestamp: date.getTime()
+        });
+        alert("✅ Appointment booked!");
+        loadAppointments();
+      } catch (e) {
+        console.error("Error adding appointment:", e);
+        alert("❌ Failed to book appointment.");
+      }
     }
 
-    window.onload = loadDoctors;
+    // ✅ Load and display appointments from Firestore
+    async function loadAppointments() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "appointments"));
+        const list = document.getElementById("appointmentList");
+        list.innerHTML = "";
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement("li");
+          li.textContent = `${data.patient} - ${data.doctor} - ${data.date}`;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        console.error("Error fetching appointments:", e);
+      }
+    }
+
+    // load appointments on page load
+    window.onload = () => {
+      loadDoctors();
+      loadAppointments();
+    }
   </script>
 </body>
 </html>
