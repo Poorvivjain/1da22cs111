@@ -16,39 +16,71 @@
     <br><a href="index.html" class="back-button">→ Back to Home page</a>
   </div>
 
-  <script>
-    function loadDoctors() {
-      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-      const select = document.getElementById("doctorSelect");
-      select.innerHTML = '<option disabled selected>Select Doctor</option>';
-      doctors.forEach(doc => {
-        const option = document.createElement("option");
-        option.value = doc.name;
-        option.textContent = doc.name;
-        select.appendChild(option);
-      });
+  <!-- ✅ Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALDkSWZRuKcG7Gfn9w1agvnWtma3qmPVc",
+      authDomain: "hmm1-84404.firebaseapp.com",
+      projectId: "hmm1-84404",
+      storageBucket: "hmm1-84404.appspot.com",
+      messagingSenderId: "380112403059",
+      appId: "1:380112403059:web:7879897802d5ca46e4c806"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadDoctors() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "doctors"));
+        const select = document.getElementById("doctorSelect");
+        select.innerHTML = '<option disabled selected>Select Doctor</option>';
+        querySnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const option = document.createElement("option");
+          option.value = data.name;
+          option.textContent = data.name;
+          select.appendChild(option);
+        });
+      } catch (e) {
+        console.error("Error loading doctors:", e);
+      }
     }
 
-    function showAppointments() {
+    window.showAppointments = async function() {
       const selectedDoctor = document.getElementById("doctorSelect").value;
-      const appointments = JSON.parse(localStorage.getItem("appointments")) || [];
       const list = document.getElementById("doctorAppointmentsList");
       list.innerHTML = "";
 
-      const filtered = appointments.filter(appt => appt.doctor === selectedDoctor);
-      if (filtered.length === 0) {
-        list.innerHTML = "<li>No appointments found for this doctor.</li>";
-        return;
-      }
+      try {
+        const querySnapshot = await getDocs(collection(db, "appointments"));
+        const filtered = [];
+        querySnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.doctor === selectedDoctor) {
+            filtered.push(data);
+          }
+        });
 
-      filtered.forEach(appt => {
-        const li = document.createElement("li");
-        li.textContent = `${appt.patient} - ${appt.date}`;
-        list.appendChild(li);
-      });
+        if (filtered.length === 0) {
+          list.innerHTML = "<li>No appointments found for this doctor.</li>";
+          return;
+        }
+
+        filtered.forEach(appt => {
+          const li = document.createElement("li");
+          li.textContent = `${appt.patient} - ${appt.date}`;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        console.error("Error loading appointments:", e);
+      }
     }
 
     window.onload = loadDoctors;
   </script>
 </body>
 </html>
+
