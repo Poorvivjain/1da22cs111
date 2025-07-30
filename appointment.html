@@ -14,31 +14,17 @@
       <option disabled selected>Select Doctor</option>
     </select>
     <input type="date" id="appointmentDate" />
-    <button onclick="addAppointment()">Book</button>
+    <button id="bookBtn">Book</button>
     <ul id="appointmentList"></ul>
     <br><a href="index.html" class="back-button">→ Back to Home</a>
   </div>
-
-  <script>
-    function loadDoctors() {
-      const select = document.getElementById("doctorSelect");
-      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-      doctors.forEach(doc => {
-        const option = document.createElement("option");
-        option.value = doc.name;
-        option.textContent = doc.name;
-        select.appendChild(option);
-      });
-    }
-    window.onload = loadDoctors;
-  </script>
 
   <!-- ✅ Firebase script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-    // Your Firebase config
+    // ✅ Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyALDkSWZRuKcG7Gfn9w1agvnWtma3qmPVc",
       authDomain: "hmm1-84404.firebaseapp.com",
@@ -50,8 +36,44 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.addAppointment = async function() {
-      const patient = document.getElementById("patientName").value;
+    // ✅ Load doctors from Firestore
+    async function loadDoctors() {
+      const select = document.getElementById("doctorSelect");
+      select.innerHTML = '<option disabled selected>Select Doctor</option>';
+      try {
+        const querySnapshot = await getDocs(collection(db, "doctors"));
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const option = document.createElement("option");
+          option.value = data.name;
+          option.textContent = `${data.name} - ${data.spec}`;
+          select.appendChild(option);
+        });
+      } catch (e) {
+        console.error("Error loading doctors:", e);
+      }
+    }
+
+    // ✅ Load appointments
+    async function loadAppointments() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "appointments"));
+        const list = document.getElementById("appointmentList");
+        list.innerHTML = "";
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement("li");
+          li.textContent = `${data.patient} - ${data.doctor} - ${data.date}`;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        console.error("Error fetching appointments:", e);
+      }
+    }
+
+    // ✅ Add new appointment
+    async function addAppointment() {
+      const patient = document.getElementById("patientName").value.trim();
       const doctor = document.getElementById("doctorSelect").value;
       const dateValue = document.getElementById("appointmentDate").value;
 
@@ -77,34 +99,22 @@
         });
         alert("✅ Appointment booked!");
         loadAppointments();
+        // clear fields
+        document.getElementById("patientName").value = '';
+        document.getElementById("appointmentDate").value = '';
       } catch (e) {
         console.error("Error adding appointment:", e);
         alert("❌ Failed to book appointment.");
       }
     }
 
-    // ✅ Load and display appointments from Firestore
-    async function loadAppointments() {
-      try {
-        const querySnapshot = await getDocs(collection(db, "appointments"));
-        const list = document.getElementById("appointmentList");
-        list.innerHTML = "";
-        querySnapshot.forEach(doc => {
-          const data = doc.data();
-          const li = document.createElement("li");
-          li.textContent = `${data.patient} - ${data.doctor} - ${data.date}`;
-          list.appendChild(li);
-        });
-      } catch (e) {
-        console.error("Error fetching appointments:", e);
-      }
-    }
-
-    // load appointments on page load
+    // ✅ Setup event & load data on page load
     window.onload = () => {
       loadDoctors();
       loadAppointments();
+      document.getElementById("bookBtn").addEventListener("click", addAppointment);
     }
   </script>
 </body>
 </html>
+
