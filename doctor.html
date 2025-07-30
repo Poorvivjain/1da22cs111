@@ -14,70 +14,106 @@
     <button onclick="addDoctor()">Add Doctor</button>
 
     <ul id="doctorList"></ul>
-    
+
     <br>
-    
-    <a href="view_appointments.html" class="back-button">→ View Appointments</a><br>
+    <a href="view_appointments.html" class="back-button">→ View Appointments</a>
   </div>
 
-  <script>
-    function addDoctor() {
-      const name = document.getElementById("doctorName").value;
-      const spec = document.getElementById("specialization").value;
-      const time = document.getElementById("timing").value;
+  <!-- ✅ Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALDkSWZRuKcG7Gfn9w1agvnWtma3qmPVc",
+      authDomain: "hmm1-84404.firebaseapp.com",
+      projectId: "hmm1-84404",
+      storageBucket: "hmm1-84404.appspot.com",
+      messagingSenderId: "380112403059",
+      appId: "1:380112403059:web:7879897802d5ca46e4c806"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addDoctor = async function() {
+      const name = document.getElementById("doctorName").value.trim();
+      const spec = document.getElementById("specialization").value.trim();
+      const time = document.getElementById("timing").value.trim();
 
       if (!name || !spec || !time) {
         alert("Please fill all fields.");
         return;
       }
 
-      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-      doctors.push({ name, spec, time });
-      localStorage.setItem("doctors", JSON.stringify(doctors));
-      displayDoctors();
-      document.getElementById("doctorName").value = '';
-      document.getElementById("specialization").value = '';
-      document.getElementById("timing").value = '';
-    }
+      try {
+        await addDoc(collection(db, "doctors"), {
+          name, spec, time
+        });
+        alert("✅ Doctor added!");
+        loadDoctors();
 
-    function deleteDoctor(index) {
-      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-      doctors.splice(index, 1);
-      localStorage.setItem("doctors", JSON.stringify(doctors));
-      displayDoctors();
-    }
-
-    function editDoctor(index) {
-      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-      const doc = doctors[index];
-      const newName = prompt("Edit name:", doc.name);
-      const newSpec = prompt("Edit specialization:", doc.spec);
-      const newTime = prompt("Edit time:", doc.time);
-
-      if (newName && newSpec && newTime) {
-        doctors[index] = { name: newName, spec: newSpec, time: newTime };
-        localStorage.setItem("doctors", JSON.stringify(doctors));
-        displayDoctors();
+        // Clear fields
+        document.getElementById("doctorName").value = '';
+        document.getElementById("specialization").value = '';
+        document.getElementById("timing").value = '';
+      } catch (e) {
+        console.error("Error adding doctor:", e);
+        alert("❌ Failed to add doctor.");
       }
     }
 
-    function displayDoctors() {
-      const doctorList = document.getElementById("doctorList");
-      doctorList.innerHTML = "";
-      const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+    window.deleteDoctor = async function(id) {
+      const confirmDelete = confirm("Are you sure you want to delete this doctor?");
+      if (!confirmDelete) return;
 
-      doctors.forEach((doc, index) => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          ${doc.name} - ${doc.spec} (${doc.time})
-          <button onclick="editDoctor(${index})">Edit</button>
-          <button onclick="deleteDoctor(${index})">Delete</button>
-        `;
-        doctorList.appendChild(li);
-      });
+      try {
+        await deleteDoc(doc(db, "doctors", id));
+        alert("🗑 Deleted!");
+        loadDoctors();
+      } catch (e) {
+        console.error("Error deleting doctor:", e);
+      }
     }
 
-    window.onload = displayDoctors;
+    window.editDoctor = async function(id, oldName, oldSpec, oldTime) {
+      const newName = prompt("Edit name:", oldName);
+      const newSpec = prompt("Edit specialization:", oldSpec);
+      const newTime = prompt("Edit time:", oldTime);
+
+      if (!newName || !newSpec || !newTime) return;
+
+      try {
+        await updateDoc(doc(db, "doctors", id), {
+          name: newName, spec: newSpec, time: newTime
+        });
+        alert("✏️ Updated!");
+        loadDoctors();
+      } catch (e) {
+        console.error("Error updating doctor:", e);
+      }
+    }
+
+    async function loadDoctors() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "doctors"));
+        const list = document.getElementById("doctorList");
+        list.innerHTML = "";
+        querySnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const li = document.createElement("li");
+          li.innerHTML = `
+            ${data.name} - ${data.spec} (${data.time})
+            <button onclick="editDoctor('${docSnap.id}', '${data.name}', '${data.spec}', '${data.time}')">Edit</button>
+            <button onclick="deleteDoctor('${docSnap.id}')">Delete</button>
+          `;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        console.error("Error loading doctors:", e);
+      }
+    }
+
+    window.onload = loadDoctors;
   </script>
 </body>
 </html>
